@@ -18,9 +18,6 @@ import { AuthService } from 'src/app/services/auth.service';
     IonHeader,
     IonTitle,
     IonToolbar,
-    IonLabel,
-    IonSpinner,
-    IonToast,
     CommonModule,
     FormsModule
   ]
@@ -43,35 +40,26 @@ export class LoginPage {
     this.loading = true;
     this.error = null;
 
-    console.log('🔐 Attempting login with:', this.username);
-    console.log('📍 API URL:', 'http://127.0.0.1:8000/api/login/');
 
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
-        console.log('✅ Login successful!');
-        console.log('📨 Response:', response);
-        console.log('🔑 Token saved:', this.authService.token());
-        console.log('👤 User saved:', this.authService.currentUser());
-
         this.loading = false;
 
-        // Give it a moment to ensure signals are updated
+        // Timeout to ensure signals are updated
         setTimeout(() => {
-          console.log('🚀 Navigating to /tabs/home');
           this.router.navigate(['/tabs/home']).then((result) => {
-            console.log('✔️ Navigation result:', result);
             if (!result) {
-              console.error('❌ Navigation failed!');
+              console.error('Navigation failed!');
               this.error = 'Navigation failed after login';
             }
           }).catch((err) => {
-            console.error('❌ Navigation error:', err);
+            console.error('Navigation error:', err);
             this.error = 'Navigation error: ' + err;
           });
         }, 100);
       },
       error: (err: any) => {
-        console.error('❌ Login error:', err);
+        console.error('Login error:', err);
         console.log('Error status:', err.status);
         console.log('Error message:', err.error);
 

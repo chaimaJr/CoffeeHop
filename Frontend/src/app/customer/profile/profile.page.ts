@@ -3,6 +3,10 @@ import { Router } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, IonLabel, IonButton, IonListHeader, IonIcon } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { AuthService } from 'src/app/services/auth.service';
+import { addIcons } from 'ionicons';
+import { star, logOut } from 'ionicons/icons';
+
+addIcons({ star, logOut });
 
 @Component({
   selector: 'app-profile',

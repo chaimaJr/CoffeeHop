@@ -49,7 +49,6 @@ export class OrderPage implements OnInit {
   allItems: MenuItem[] = [];
   filteredItems: MenuItem[] = [];
   
-  // Use the signal directly - no async pipe needed
   get cart() {
     return this.cartService.cart$();
   }
@@ -63,6 +62,7 @@ export class OrderPage implements OnInit {
   itemQuantity = 1;
   itemNotes = '';
   loading = true;
+  error: string | null = null;
 
   ngOnInit(): void {
     this.loadMenuItems();
@@ -70,13 +70,29 @@ export class OrderPage implements OnInit {
 
   loadMenuItems(): void {
     this.apiService.getMenuItems().subscribe({
-      next: (items) => {
-        this.allItems = items;
+      next: (response: any) => {
+        console.log('📋 Menu response:', response);
+
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          this.allItems = response;
+        } else if (response?.results && Array.isArray(response.results)) {
+          this.allItems = response.results;
+        } else if (response?.data && Array.isArray(response.data)) {
+          this.allItems = response.data;
+        } else {
+          console.warn('❌ Unexpected menu response format:', response);
+          this.error = 'Invalid menu format';
+          this.allItems = [];
+        }
+
+        console.log('✅ Menu items loaded:', this.allItems.length);
         this.onTypeChange();
         this.loading = false;
       },
       error: (err) => {
-        console.error('Failed to load menu', err);
+        console.error('❌ Failed to load menu', err);
+        this.error = 'Failed to load menu items';
         this.loading = false;
       },
     });
@@ -84,6 +100,7 @@ export class OrderPage implements OnInit {
 
   onTypeChange(): void {
     this.filteredItems = this.allItems.filter((item) => item.item_type === this.selectedType);
+    console.log(`Filtered ${this.selectedType}:`, this.filteredItems.length);
   }
 
   addItem(item: MenuItem): void {
