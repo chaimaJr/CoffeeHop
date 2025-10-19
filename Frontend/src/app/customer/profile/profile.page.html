@@ -1,0 +1,71 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Account Information -->
+  <ion-card style="margin: 1rem;">
+    <ion-card-header>
+      <ion-card-title>Account Information</ion-card-title>
+    </ion-card-header>
+    <ion-card-content *ngIf="user()">
+      <ion-item lines="none">
+        <ion-label>
+          <p style="color: #999; font-size: 0.9rem;">Username</p>
+          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().username }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label>
+          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Email</p>
+          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().email }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label>
+          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Role</p>
+          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().role }}</h2>
+        </ion-label>
+      </ion-item>
+
+      <ion-item *ngIf="user().phone" lines="none">
+        <ion-label>
+          <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Phone</p>
+          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().phone }}</h2>
+        </ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Loyalty Points Card -->
+  <ion-card style="margin: 1rem;">
+    <ion-card-header>
+      <ion-card-title>Loyalty Points</ion-card-title>
+    </ion-card-header>
+    <ion-card-content *ngIf="user()">
+      <h1 style="color: #667eea; text-align: center; margin: 1rem 0; font-size: 2.5rem;">
+        {{ user().loyalty_points }}
+      </h1>
+      <p style="text-align: center; color: #999;">
+        <ion-icon name="star"></ion-icon> 1 point = $1 spent
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Spacer -->
+  <div style="flex: 1;"></div>
+
+  <!-- Logout Button -->
+  <ion-button 
+    expand="block" 
+    color="danger" 
+    style="margin: 2rem 1rem 1rem 1rem;"
+    (click)="logout()">
+    <ion-icon slot="start" name="log-out"></ion-icon>
+    LOGOUT
+  </ion-button>
+</ion-content>

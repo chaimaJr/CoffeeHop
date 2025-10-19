@@ -1,0 +1,98 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Order</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Loading State -->
+  <ion-spinner *ngIf="loading" name="crescent" style="display: flex; justify-content: center; margin: 2rem;"></ion-spinner>
+
+  <ng-container *ngIf="!loading">
+    <!-- Type Selector -->
+    <ion-segment [(ngModel)]="selectedType" (ionChange)="onTypeChange()" style="padding: 1rem 0;">
+      <ion-segment-button value="COFFEE">
+        <ion-label>☕ Coffee</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="DESSERT">
+        <ion-label>🍰 Dessert</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Menu Items List -->
+    <ion-list style="margin-top: 1rem;">
+      <ion-item *ngFor="let item of filteredItems" [disabled]="!item.is_available">
+        <ion-label>
+          <h2>{{ item.title }}</h2>
+          <p style="color: #999;">{{ item.description }}</p>
+          <p style="margin-top: 0.5rem; color: #667eea; font-weight: bold;">${{ item.price }}</p>
+        </ion-label>
+        <ion-button 
+          slot="end" 
+          fill="clear" 
+          color="primary" 
+          (click)="addItem(item)"
+          [disabled]="!item.is_available">
+          <ion-icon slot="icon-only" name="add"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </ng-container>
+
+  <!-- Item Detail Modal -->
+  <ion-modal [isOpen]="showItemDetail" (ionDismiss)="showItemDetail = false">
+    <ng-template ionModalContent *ngIf="selectedItem">
+      <ion-header [translucent]="true">
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="showItemDetail = false">Cancel</ion-button>
+          </ion-buttons>
+          <ion-title>{{ selectedItem.title }}</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p>{{ selectedItem.description }}</p>
+        <p>Price: <strong>${{ selectedItem.price }}</strong></p>
+        <p>Prep Time: {{ selectedItem.preparation_time }} mins</p>
+
+        <ion-item style="margin-top: 1rem;">
+          <ion-label>Quantity</ion-label>
+          <ion-input 
+            type="number" 
+            [(ngModel)]="itemQuantity" 
+            min="1"
+            inputmode="numeric">
+          </ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Special Notes (optional)</ion-label>
+          <ion-textarea 
+            [(ngModel)]="itemNotes" 
+            placeholder="e.g., extra shot, almond milk">
+          </ion-textarea>
+        </ion-item>
+
+        <ion-button 
+          expand="block" 
+          color="primary" 
+          style="margin-top: 2rem;" 
+          (click)="confirmAdd()">
+          ADD TO CART
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Cart Floating Button -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="cart.length > 0">
+    <ion-fab-button 
+      color="primary" 
+      (click)="goToCheckout()">
+      <ion-icon name="cart"></ion-icon>
+      <ion-badge color="danger" *ngIf="itemCount > 0">
+        {{ itemCount }}
+      </ion-badge>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

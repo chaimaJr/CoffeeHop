@@ -1,0 +1,51 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>☕ Coffee Shop</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">Welcome Back!</h2>
+    <p style="margin: 0.5rem 0 0 0; opacity: 0.9;" *ngIf="user">{{ user().username }}</p>
+  </div>
+
+  <ion-card style="margin: 1rem;">
+    <ion-card-header>
+      <ion-card-title>Your Loyalty Points</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <h1 style="color: #667eea; text-align: center; margin: 0;">{{ user()?.loyalty_points || 0 }}</h1>
+      <p style="text-align: center; color: #999;">points earned</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="block" color="primary" routerLink="/order" style="margin: 1rem;">
+    📍 NEW ORDER
+  </ion-button>
+
+  <ion-list-header>
+    <ion-label>Recent Orders</ion-label>
+  </ion-list-header>
+
+  <div *ngIf="recentOrders.length === 0; else ordersList" style="padding: 2rem; text-align: center; color: #999;">
+    <p>No orders yet. Start your first order!</p>
+  </div>
+
+  <ng-template #ordersList>
+    <ion-card *ngFor="let order of recentOrders" style="margin: 0.5rem 1rem;">
+      <ion-card-content>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="margin: 0; font-weight: bold;">Order #{{ order.id }}</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #999;">{{ order.created_at | date: 'short' }}</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin: 0; font-weight: bold;">${{ order.total_price }}</p>
+            <ion-badge [color]="getStatusColor(order.status)" style="margin-top: 0.5rem;">{{ order.status }}</ion-badge>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </ng-template>
+</ion-content>

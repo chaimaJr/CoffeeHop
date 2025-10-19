@@ -1,0 +1,73 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Sign Up</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div style="text-align: center; margin-top: 2rem; margin-bottom: 2rem;">
+    <h1>☕ Coffee Shop</h1>
+    <p>Create Your Account</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onRegister()" style="padding: 1rem;">
+    <ion-item>
+      <ion-label position="floating">Username</ion-label>
+      <ion-input 
+        type="text" 
+        formControlName="username"
+        placeholder="johndoe"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+
+    <ion-item style="margin-top: 1rem;">
+      <ion-label position="floating">Email</ion-label>
+      <ion-input 
+        type="email" 
+        formControlName="email"
+        placeholder="you@example.com"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+
+    <ion-item style="margin-top: 1rem;">
+      <ion-label position="floating">Password</ion-label>
+      <ion-input 
+        type="password" 
+        formControlName="password"
+        placeholder="••••••"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+
+    <ion-button 
+      expand="block" 
+      type="submit" 
+      color="primary" 
+      [disabled]="form.invalid || loading" 
+      style="margin-top: 2rem;">
+      <ion-spinner *ngIf="loading" name="crescent" style="margin-right: 0.5rem;"></ion-spinner>
+      {{ loading ? 'Creating Account...' : 'Sign Up' }}
+    </ion-button>
+  </form>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <p>Already have an account? 
+      <ion-router-link [routerLink]="['/login']" style="color: #667eea; text-decoration: none; font-weight: bold;">
+        Login
+      </ion-router-link>
+    </p>
+  </div>
+
+  <ion-toast 
+    [isOpen]="!!error" 
+    [message]="error || ''" 
+    color="danger" 
+    duration="3000" 
+    (didDismiss)="error = null">
+  </ion-toast>
+</ion-content>

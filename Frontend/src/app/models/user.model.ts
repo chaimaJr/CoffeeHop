@@ -2,13 +2,13 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
+  role: 'CUSTOMER' | 'BARISTA' | 'ADMIN';
   loyalty_points: number;
+  phone?: string;
 }
 
-export interface LoginResponse {
-  token: string;
+export interface AuthResponse {
+  access: string;
+  refresh: string;
   user: User;
 }

@@ -3,7 +3,8 @@ export interface MenuItem {
   title: string;
   description: string;
   price: number;
-  image?: string;
   item_type: 'COFFEE' | 'DESSERT';
+  image?: string;
   is_available: boolean;
+  preparation_time: number;
 }

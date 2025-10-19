@@ -1,0 +1,143 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Order Queue</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" fill="clear">
+        <ion-icon slot="icon-only" name="log-out"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Loading State -->
+  <ion-spinner *ngIf="loading" name="crescent" style="display: flex; justify-content: center; margin: 2rem;"></ion-spinner>
+
+  <!-- Three Column Kanban Board -->
+  <div *ngIf="!loading" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; padding: 1rem; min-height: 100%; height: fit-content;">
+    
+    <!-- RECEIVED Column -->
+    <div style="background: #f5f5f5; border-radius: 8px; padding: 1rem; overflow-y: auto; max-height: 85vh;">
+      <h3 style="margin: 0 0 1rem 0; color: #ff9800; font-size: 0.95rem;">
+        📥 RECEIVED
+        <ion-badge color="warning">{{ getCountByStatus('RECEIVED') }}</ion-badge>
+      </h3>
+      
+      <ng-container *ngIf="getOrdersByStatus('RECEIVED').length === 0; else receivedOrders">
+        <p style="text-align: center; color: #ccc;">No orders</p>
+      </ng-container>
+
+      <ng-template #receivedOrders>
+        <ion-card *ngFor="let order of getOrdersByStatus('RECEIVED')" style="margin-bottom: 0.5rem; cursor: pointer;">
+          <ion-card-content style="padding: 0.75rem;">
+            <p style="margin: 0; font-weight: bold; font-size: 0.95rem;">Order #{{ order.id }}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #999;">
+              {{ order.created_at | date: 'HH:mm' }}
+            </p>
+            <div style="margin: 0.5rem 0; background: #fff; padding: 0.5rem; border-radius: 4px;">
+              <p style="margin: 0; font-size: 0.85rem;" *ngFor="let item of order.items">
+                • {{ item.quantity }}x {{ item.menu_item.title }}
+              </p>
+            </div>
+            <ion-button 
+              expand="block" 
+              size="small" 
+              color="primary"
+              (click)="updateStatus(order.id, 'PREPARING')"
+              style="margin: 0.5rem 0 0 0;">
+              START
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ng-template>
+    </div>
+
+    <!-- PREPARING Column -->
+    <div style="background: #f5f5f5; border-radius: 8px; padding: 1rem; overflow-y: auto; max-height: 85vh;">
+      <h3 style="margin: 0 0 1rem 0; color: #2196f3; font-size: 0.95rem;">
+        👨‍🍳 PREPARING
+        <ion-badge color="primary">{{ getCountByStatus('PREPARING') }}</ion-badge>
+      </h3>
+      
+      <ng-container *ngIf="getOrdersByStatus('PREPARING').length === 0; else preparingOrders">
+        <p style="text-align: center; color: #ccc;">No orders</p>
+      </ng-container>
+
+      <ng-template #preparingOrders>
+        <ion-card *ngFor="let order of getOrdersByStatus('PREPARING')" style="margin-bottom: 0.5rem; cursor: pointer;">
+          <ion-card-content style="padding: 0.75rem;">
+            <p style="margin: 0; font-weight: bold; font-size: 0.95rem;">Order #{{ order.id }}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #999;">
+              {{ order.created_at | date: 'HH:mm' }}
+            </p>
+            <div style="margin: 0.5rem 0; background: #fff; padding: 0.5rem; border-radius: 4px;">
+              <p style="margin: 0; font-size: 0.85rem;" *ngFor="let item of order.items">
+                • {{ item.quantity }}x {{ item.menu_item.title }}
+              </p>
+            </div>
+            <ion-button 
+              expand="block" 
+              size="small" 
+              color="success"
+              (click)="updateStatus(order.id, 'READY')"
+              style="margin: 0.5rem 0 0 0;">
+              MARK READY
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ng-template>
+    </div>
+
+    <!-- READY Column -->
+    <div style="background: #f5f5f5; border-radius: 8px; padding: 1rem; overflow-y: auto; max-height: 85vh;">
+      <h3 style="margin: 0 0 1rem 0; color: #4caf50; font-size: 0.95rem;">
+        ✅ READY
+        <ion-badge color="success">{{ getCountByStatus('READY') }}</ion-badge>
+      </h3>
+      
+      <ng-container *ngIf="getOrdersByStatus('READY').length === 0; else readyOrders">
+        <p style="text-align: center; color: #ccc;">No orders</p>
+      </ng-container>
+
+      <ng-template #readyOrders>
+        <ion-card *ngFor="let order of getOrdersByStatus('READY')" style="margin-bottom: 0.5rem; cursor: pointer;">
+          <ion-card-content style="padding: 0.75rem;">
+            <p style="margin: 0; font-weight: bold; font-size: 0.95rem;">Order #{{ order.id }}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #999;">
+              {{ order.created_at | date: 'HH:mm' }}
+            </p>
+            <div style="margin: 0.5rem 0; background: #fff; padding: 0.5rem; border-radius: 4px;">
+              <p style="margin: 0; font-size: 0.85rem;" *ngFor="let item of order.items">
+                • {{ item.quantity }}x {{ item.menu_item.title }}
+              </p>
+            </div>
+            <ion-button 
+              expand="block" 
+              size="small" 
+              color="medium"
+              (click)="updateStatus(order.id, 'COMPLETED')"
+              style="margin: 0.5rem 0 0 0;">
+              PICKED UP
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Refresh Button (Floating) -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="refreshQueue()">
+      <ion-icon name="refresh"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <!-- Update Toast -->
+  <ion-toast 
+    [isOpen]="!!updateMessage" 
+    [message]="updateMessage || ''" 
+    color="success" 
+    duration="2000" 
+    (didDismiss)="updateMessage = null">
+  </ion-toast>
+</ion-content>
