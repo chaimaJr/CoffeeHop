@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Order</ion-title>
+    @if (cart.length > 0) {
+      <ion-badge slot="end">{{ getCartTotal() }}</ion-badge>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Loading spinner -->
+  @if (isLoading) {
+    <div class="ion-text-center ion-padding">
+      <ion-spinner></ion-spinner>
+    </div>
+  }
+
+  <!-- Menu items grid -->
+  @if (!isLoading) {
+    <ion-grid>
+      <ion-row>
+        @for (item of menuItems; track item.id) {
+          <ion-col size="12" sizeMd="6" sizeLg="4">
+            <ion-card>
+              @if (item.image) {
+                <ion-img [src]="item.image"></ion-img>
+              }
+              
+              <ion-card-header>
+                <ion-card-title>{{ item.title }}</ion-card-title>
+                <ion-card-subtitle>${{ item.price }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <p>{{ item.description }}</p>
+              </ion-card-content>
+              <ion-button expand="block" (click)="addToCart(item)">
+                Add to Cart
+              </ion-button>
+            </ion-card>
+          </ion-col>
+        }
+      </ion-row>
+    </ion-grid>
+  }
+
+  <!-- Place order button -->
+  @if (cart.length > 0) {
+    <ion-button 
+      expand="block" 
+      color="success" 
+      (click)="placeOrder()"
+      class="ion-margin-top"
+    >
+      Place Order ({{ getCartTotal() }} items)
+    </ion-button>
+  }
+</ion-content>
