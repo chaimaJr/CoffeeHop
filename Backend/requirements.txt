@@ -1,0 +1,23 @@
+asgiref==3.10.0
+Django==5.2.7
+sqlparse==0.5.3
+tzdata==2025.2
+
+
+djangorestframework
+django-cors-headers
+
+# Image handling for menu item photos
+Pillow
+
+# Filtering support for API querysets
+django-filter
+
+# Channels for WebSocket support (real-time order updates)
+channels
+
+# Redis support for Channels (for production)
+channels-redis
+
+# ASGI server for running Django with WebSocket support
+daphne
