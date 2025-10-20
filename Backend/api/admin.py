@@ -5,10 +5,7 @@ Registers models with the admin interface for easy management.
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import (
-    User, MenuItem, Order, OrderItem,
-    FavouriteOrder, LoyaltyOffer, Notification
-)
+from .models import *
 
 # ============================================================================
 # USER ADMIN
@@ -302,6 +299,46 @@ class NotificationAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+# ============================================================================
+# Loyalty Redemption Admin
+# ============================================================================
+
+@admin.register(LoyaltyRedemption)
+class LoyaltyRedemptionAdmin(admin.ModelAdmin):
+    """
+    Admin interface for loyalty redemptions.
+    Allows viewing and managing customer redemptions.
+    """
+    
+    list_display = [
+        'id', 'customer', 'loyalty_offer', 'redemption_code',
+        'points_spent', 'is_used', 'redeemed_at'
+    ]
+    
+    list_filter = [
+        'is_used', 'redeemed_at', 'loyalty_offer'
+    ]
+    
+    search_fields = [
+        'customer__username', 'customer__email',
+        'redemption_code', 'loyalty_offer__title'
+    ]
+    
+    readonly_fields = [
+        'customer', 'loyalty_offer', 'points_spent',
+        'redemption_code', 'redeemed_at'
+    ]
+    
+    ordering = ['-redeemed_at']
+    
+    # Allow filtering by date
+    date_hierarchy = 'redeemed_at'
+    
+    def has_add_permission(self, request):
+        """Prevent manual creation of redemptions in admin"""
+        return False
 
 
 # ============================================================================

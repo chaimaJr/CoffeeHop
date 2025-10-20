@@ -1,6 +1,3 @@
-// ============================================================================
-// src/app/services/api.service.ts (FIXED - Match Backend Endpoints)
-// ============================================================================
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -21,10 +18,6 @@ export class ApiService {
   }
 
   // ===== ORDERS - CUSTOMER =====
-  /**
-   * Create order
-   * Backend expects: order_items array with menu_item, quantity, price, customizations
-   */
   createOrder(payload: any): Observable<Order> {
     return this.http.post<Order>(`${this.apiUrl}/orders/`, payload);
   }
@@ -48,7 +41,7 @@ export class ApiService {
   }
 
   /**
-   * Cancel order (DELETE)
+   * Cancel order 
    */
   cancelOrder(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/orders/${id}/`);
@@ -65,15 +58,14 @@ export class ApiService {
 
   // ===== ORDERS - BARISTA =====
   /**
-   * Get order queue (barista only)
+   * Get order queue 
    */
   getOrderQueue(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.apiUrl}/orders/queue/`);
   }
 
   /**
-   * Update order status (barista only)
-   * Endpoint: POST /api/orders/{id}/update_status/
+   * Update order status 
    */
   updateOrderStatus(id: number, status: string): Observable<Order> {
     return this.http.post<Order>(`${this.apiUrl}/orders/${id}/update_status/`, {
@@ -123,6 +115,10 @@ export class ApiService {
     return this.http.get<any>(`${this.apiUrl}/loyalty-points/`);
   }
 
+  redeemLoyaltyOffer(offerId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/loyalty-offers/${offerId}/redeem/`, {});
+  }
+
   /**
    * Get available loyalty offers
    */
@@ -136,6 +132,10 @@ export class ApiService {
    */
   updateProfile(data: any): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/profile/`, data);
+  }
+
+  getProfile(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/profile/`);
   }
 
   // ===== NOTIFICATIONS =====

@@ -5,10 +5,7 @@ Each serializer defines which fields are exposed and validation rules.
 
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import (
-    User, MenuItem, Order, OrderItem, 
-    FavouriteOrder, LoyaltyOffer, Notification
-)
+from .models import *
 
 # User serializers for authentication and profile management
 class UserSerializer(serializers.ModelSerializer):
@@ -384,3 +381,28 @@ class NotificationSerializer(serializers.ModelSerializer):
             'order', 'is_read', 'sent_at'
         ]
         read_only_fields = ['id', 'sent_at']
+
+
+
+class LoyaltyRedemptionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for LoyaltyRedemption - tracks redeemed offers.
+    Shows redemption history with offer details.
+    """
+    
+    # Include offer details
+    loyalty_offer_detail = LoyaltyOfferSerializer(source='loyalty_offer', read_only=True)
+    # Customer name for display
+    customer_name = serializers.CharField(source='customer.username', read_only=True)
+    
+    class Meta:
+        model = LoyaltyRedemption
+        fields = [
+            'id', 'customer', 'customer_name', 'loyalty_offer', 
+            'loyalty_offer_detail', 'points_spent', 'redemption_code',
+            'is_used', 'order', 'redeemed_at'
+        ]
+        read_only_fields = [
+            'id', 'customer', 'points_spent', 'redemption_code', 
+            'redeemed_at'
+        ]

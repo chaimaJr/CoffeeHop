@@ -568,3 +568,104 @@ class Notification(models.Model):
     def __str__(self):
         """String representation of notification"""
         return f"{self.notification_type} to {self.user.username}"
+    
+
+
+# ============================================================================
+# LOYALTY REDEMPTION MODEL
+# ============================================================================
+
+class LoyaltyRedemption(models.Model):
+    """
+    Track loyalty offer redemptions by customers.
+    Records when and which offers customers have redeemed.
+    
+    Fields:
+    - customer: Who redeemed the offer
+    - loyalty_offer: Which offer was redeemed
+    - points_spent: Points deducted at redemption time
+    - redemption_code: Unique code for barista verification
+    - is_used: Whether redemption has been applied to an order
+    - redeemed_at: When offer was redeemed
+    """
+    
+    # Customer who redeemed the offer
+    customer = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='loyalty_redemptions',
+        help_text="Customer who redeemed the offer"
+    )
+    
+    # The offer that was redeemed
+    loyalty_offer = models.ForeignKey(
+        LoyaltyOffer,
+        on_delete=models.CASCADE,
+        related_name='redemptions',
+        help_text="Loyalty offer that was redeemed"
+    )
+    
+    # Points spent at time of redemption (snapshot)
+    points_spent = models.IntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Points deducted at redemption time"
+    )
+    
+    # Unique redemption code for verification
+    redemption_code = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text="Unique code for barista verification"
+    )
+    
+    # Whether this redemption has been used on an order
+    is_used = models.BooleanField(
+        default=False,
+        help_text="Whether redemption has been applied to an order"
+    )
+    
+    # Optional: link to order where redemption was used
+    order = models.ForeignKey(
+        'Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='loyalty_redemptions',
+        help_text="Order where redemption was applied"
+    )
+    
+    # When the offer was redeemed
+    redeemed_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When offer was redeemed"
+    )
+    
+    class Meta:
+        ordering = ['-redeemed_at']
+        indexes = [
+            models.Index(fields=['customer', '-redeemed_at']),
+            models.Index(fields=['redemption_code']),
+            models.Index(fields=['is_used']),
+        ]
+    
+    def __str__(self):
+        """String representation of redemption"""
+        return f"{self.customer.username} - {self.loyalty_offer.title} ({self.redemption_code})"
+    
+    def generate_code(self):
+        """Generate unique redemption code"""
+        import random
+        import string
+        
+        # Generate 8-character alphanumeric code
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            # Check if code is unique
+            if not LoyaltyRedemption.objects.filter(redemption_code=code).exists():
+                return code
+    
+    def save(self, *args, **kwargs):
+        """Override save to generate redemption code"""
+        if not self.redemption_code:
+            self.redemption_code = self.generate_code()
+        super().save(*args, **kwargs)

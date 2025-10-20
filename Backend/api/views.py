@@ -12,16 +12,8 @@ from django.shortcuts import get_object_or_404
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import (
-    User, MenuItem, Order, OrderItem,
-    FavouriteOrder, LoyaltyOffer, Notification
-)
-from .serializers import (
-    UserSerializer, UserRegistrationSerializer, LoginSerializer,
-    MenuItemSerializer, OrderSerializer, OrderListSerializer,
-    OrderItemSerializer, FavouriteOrderSerializer,
-    LoyaltyOfferSerializer, NotificationSerializer
-)
+from .models import *
+from .serializers import *
 
 # ============================================================================
 # CUSTOM PERMISSION CLASSES
@@ -295,9 +287,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         
         # Set status to cancelled instead of deleting
-        order.status = Order.OrderStatus.CANCELLED
-        order.save()
-        
+        # order.status = Order.OrderStatus.CANCELLED
+        # order.save()
+        order.delete()
+
         return Response({
             'message': 'Order cancelled successfully'
         })
@@ -445,6 +438,7 @@ class LoyaltyOfferViewSet(viewsets.ReadOnlyModelViewSet):
     Endpoints:
     - GET /api/loyalty-offers/ - List all active offers
     - GET /api/loyalty-offers/{id}/ - Get offer details
+    - POST /api/loyalty-offers/{id}/redeem/ - Redeem an offer
     """
     
     queryset = LoyaltyOffer.objects.filter(is_active=True)
@@ -460,7 +454,139 @@ class LoyaltyOfferViewSet(viewsets.ReadOnlyModelViewSet):
             # Either no expiry or not yet expired
             models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=now)
         )
+    
+    @action(detail=True, methods=['post'])
+    def redeem(self, request, pk=None):
+        """
+        Redeem a loyalty offer using points.
+        POST /api/loyalty-offers/{id}/redeem/
+        
+        Validates:
+        - User has enough points
+        - Offer is active and valid
+        
+        Returns:
+        - Redemption details with unique code
+        - Updated user points balance
+        """
+        offer = self.get_object()
+        user = request.user
+        
+        # Check if offer is currently valid
+        now = timezone.now()
+        if not offer.is_active:
+            return Response(
+                {'error': 'This offer is not currently active'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if offer.valid_from > now:
+            return Response(
+                {'error': 'This offer is not yet available'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if offer.valid_until and offer.valid_until < now:
+            return Response(
+                {'error': 'This offer has expired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if user has enough points
+        if user.loyalty_points < offer.points_required:
+            return Response(
+                {
+                    'error': 'Insufficient loyalty points',
+                    'required': offer.points_required,
+                    'available': user.loyalty_points
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create redemption record
+        redemption = LoyaltyRedemption.objects.create(
+            customer=user,
+            loyalty_offer=offer,
+            points_spent=offer.points_required
+        )
+        
+        # Deduct points from user
+        user.loyalty_points -= offer.points_required
+        user.save()
+        
+        # Create notification for successful redemption
+        Notification.objects.create(
+            user=user,
+            notification_type=Notification.NotificationType.PROMOTION,
+            title=f'🎉 {offer.title} Redeemed!',
+            message=f'You have successfully redeemed "{offer.title}". '
+                   f'Use code {redemption.redemption_code} at checkout. '
+                   f'Remaining points: {user.loyalty_points}'
+        )
+        
+        # Return redemption details
+        return Response({
+            'message': 'Offer redeemed successfully',
+            'redemption_id': redemption.id,
+            'redemption_code': redemption.redemption_code,
+            'points_spent': redemption.points_spent,
+            'remaining_points': user.loyalty_points,
+            'offer': LoyaltyOfferSerializer(offer).data
+        }, status=status.HTTP_201_CREATED)
 
+
+# ============================================================================
+# LOYALTY REDEMPTION VIEWSET
+# ============================================================================
+
+class LoyaltyRedemptionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    View redemption history for current user.
+    
+    Endpoints:
+    - GET /api/loyalty-redemptions/ - List my redemptions
+    - GET /api/loyalty-redemptions/{id}/ - Get redemption details
+    """
+    
+    serializer_class = LoyaltyRedemptionSerializer
+    
+    def get_queryset(self):
+        """Return only current user's redemptions"""
+        return LoyaltyRedemption.objects.filter(customer=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def mark_used(self, request, pk=None):
+        """
+        Mark redemption as used (for barista).
+        POST /api/loyalty-redemptions/{id}/mark_used/
+        Body: {order_id: 123} (optional)
+        """
+        redemption = self.get_object()
+        
+        if redemption.is_used:
+            return Response(
+                {'error': 'This redemption has already been used'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Mark as used
+        redemption.is_used = True
+        
+        # Link to order if provided
+        order_id = request.data.get('order_id')
+        if order_id:
+            try:
+                order = Order.objects.get(id=order_id, customer=request.user)
+                redemption.order = order
+            except Order.DoesNotExist:
+                pass
+        
+        redemption.save()
+        
+        return Response({
+            'message': 'Redemption marked as used',
+            'redemption': LoyaltyRedemptionSerializer(redemption).data
+        })
 
 # ============================================================================
 # NOTIFICATION VIEWSET

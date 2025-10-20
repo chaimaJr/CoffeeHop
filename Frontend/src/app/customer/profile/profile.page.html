@@ -8,7 +8,14 @@
   <!-- Account Information -->
   <ion-card style="margin: 1rem;">
     <ion-card-header>
-      <ion-card-title>Account Information</ion-card-title>
+      <ion-card-title>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          Account Information
+          <ion-button size="small" fill="outline" (click)="openEditProfile()">
+            <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-title>
     </ion-card-header>
     <ion-card-content *ngIf="user()">
       <ion-item lines="none">
@@ -28,14 +35,18 @@
       <ion-item lines="none">
         <ion-label>
           <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Role</p>
-          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().role }}</h2>
+          <h2 style="margin-top: 0.5rem; color: #333;">
+            <ion-badge [color]="user().role === 'CUSTOMER' ? 'primary' : 'warning'">
+              {{ user().role }}
+            </ion-badge>
+          </h2>
         </ion-label>
       </ion-item>
 
-      <ion-item *ngIf="user().phone" lines="none">
+      <ion-item lines="none">
         <ion-label>
           <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">Phone</p>
-          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().phone }}</h2>
+          <h2 style="margin-top: 0.5rem; color: #333;">{{ user().phone || 'Not set' }}</h2>
         </ion-label>
       </ion-item>
     </ion-card-content>
@@ -56,16 +67,103 @@
     </ion-card-content>
   </ion-card>
 
+  <!-- Loyalty Offers Section -->
+  <ion-list-header *ngIf="loyaltyOffers.length > 0">
+    <ion-label>🎁 Available Rewards</ion-label>
+  </ion-list-header>
+
+  <!-- Loading Offers -->
+  <div *ngIf="loadingOffers" style="display: flex; justify-content: center; padding: 2rem;">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- Loyalty Offers List -->
+  <ion-card *ngFor="let offer of loyaltyOffers" style="margin: 0.5rem 1rem;">
+    <ion-card-content>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+        <div style="flex: 1;">
+          <h3 style="margin: 0; color: #333;">{{ offer.title }}</h3>
+          <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">{{ offer.description }}</p>
+          <p style="margin: 0.5rem 0 0 0; color: #667eea; font-weight: bold;">
+            <ion-icon name="star"></ion-icon> {{ offer.points_required }} points required
+          </p>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+          <ion-badge [color]="canRedeemOffer(offer) ? 'success' : 'medium'">
+            {{ canRedeemOffer(offer) ? 'Available' : 'Locked' }}
+          </ion-badge>
+          <ion-button 
+            size="small" 
+            [disabled]="!canRedeemOffer(offer) || redeemingOfferId === offer.id"
+            (click)="redeemOffer(offer)">
+            <ion-spinner *ngIf="redeemingOfferId === offer.id" name="crescent" style="margin-right: 4px;"></ion-spinner>
+            {{ redeemingOfferId === offer.id ? 'Redeeming...' : 'Redeem' }}
+          </ion-button>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <p *ngIf="!loadingOffers && loyaltyOffers.length === 0" style="padding: 2rem; text-align: center; color: #999;">
+    No loyalty offers available at the moment
+  </p>
+
   <!-- Spacer -->
-  <div style="flex: 1;"></div>
+  <div style="height: 2rem;"></div>
 
   <!-- Logout Button -->
   <ion-button 
     expand="block" 
     color="danger" 
-    style="margin: 2rem 1rem 1rem 1rem;"
+    style="margin: 2rem 1rem 2rem 1rem;"
     (click)="logout()">
     <ion-icon slot="start" name="log-out"></ion-icon>
     LOGOUT
   </ion-button>
+
+  <!-- Edit Profile Modal -->
+  <ion-modal [isOpen]="showEditProfileModal" (ionModalDidDismiss)="showEditProfileModal = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="showEditProfileModal = false">Cancel</ion-button>
+          </ion-buttons>
+          <ion-title>Edit Profile</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p style="color: #666; margin-bottom: 1.5rem;">Update your profile information</p>
+        
+        <ion-item>
+          <ion-label position="floating">Phone Number</ion-label>
+          <ion-input 
+            [(ngModel)]="editPhone" 
+            placeholder="+1234567890"
+            type="tel">
+          </ion-input>
+        </ion-item>
+
+        <ion-button 
+          expand="block" 
+          color="primary" 
+          style="margin-top: 2rem;"
+          [disabled]="updatingProfile"
+          (click)="updateProfile()">
+          <ion-spinner *ngIf="updatingProfile" name="crescent" style="margin-right: 8px;"></ion-spinner>
+          {{ updatingProfile ? 'Updating...' : 'SAVE CHANGES' }}
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Toast Notifications -->
+  <ion-toast
+    [isOpen]="showToast"
+    [message]="toastMessage"
+    [duration]="4000"
+    [color]="toastColor"
+    [position]="'top'"
+    (ionToastDidDismiss)="showToast = false">
+  </ion-toast>
 </ion-content>

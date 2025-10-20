@@ -5,11 +5,18 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Pull to Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Welcome Banner -->
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; color: white; margin-bottom: 1rem;">
     <h2 style="margin: 0;">Welcome Back!</h2>
     <p style="margin: 0.5rem 0 0 0; opacity: 0.9;" *ngIf="user">{{ user().username }}</p>
   </div>
 
+  <!-- Loyalty Points Card -->
   <ion-card style="margin: 1rem;">
     <ion-card-header>
       <ion-card-title>Your Loyalty Points</ion-card-title>
@@ -20,32 +27,118 @@
     </ion-card-content>
   </ion-card>
 
-  <ion-button expand="block" color="primary" routerLink="/order" style="margin: 1rem;">
+  <!-- New Order Button -->
+  <ion-button expand="block" color="primary" routerLink="/tabs/order" style="margin: 1rem;">
     📍 NEW ORDER
   </ion-button>
 
+  <!-- Favourite Orders Section -->
+  <ion-list-header *ngIf="favourites.length > 0">
+    <ion-label>⭐ Your Favorites</ion-label>
+  </ion-list-header>
+
+  <ion-card *ngFor="let fav of favourites" style="margin: 0.5rem 1rem;">
+    <ion-card-content>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1;">
+          <p style="margin: 0; font-weight: bold;">{{ fav.name }}</p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #999;">Saved {{ fav.created_at | date: 'short' }}</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <ion-button size="small" fill="outline" (click)="reorderFavorite(fav)">
+            <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+          </ion-button>
+          <ion-button size="small" fill="outline" color="danger" (click)="deleteFavorite(fav)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Recent Orders Section -->
   <ion-list-header>
     <ion-label>Recent Orders</ion-label>
   </ion-list-header>
 
-  <div *ngIf="recentOrders.length === 0; else ordersList" style="padding: 2rem; text-align: center; color: #999;">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" style="display: flex; justify-content: center; padding: 2rem;">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <!-- No Orders State -->
+  <div *ngIf="!loading && recentOrders.length === 0" style="padding: 2rem; text-align: center; color: #999;">
     <p>No orders yet. Start your first order!</p>
   </div>
 
-  <ng-template #ordersList>
-    <ion-card *ngFor="let order of recentOrders" style="margin: 0.5rem 1rem;">
-      <ion-card-content>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <p style="margin: 0; font-weight: bold;">Order #{{ order.id }}</p>
-            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #999;">{{ order.created_at | date: 'short' }}</p>
-          </div>
-          <div style="text-align: right;">
-            <p style="margin: 0; font-weight: bold;">${{ order.total_price }}</p>
-            <ion-badge [color]="getStatusColor(order.status)" style="margin-top: 0.5rem;">{{ order.status }}</ion-badge>
-          </div>
+  <!-- Orders List -->
+  <ion-card *ngFor="let order of recentOrders" style="margin: 0.5rem 1rem;" (click)="openOrderActions(order)">
+    <ion-card-content>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <p style="margin: 0; font-weight: bold;">Order #{{ order.id }}</p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #999;">{{ order.created_at | date: 'short' }}</p>
+          <p *ngIf="order.notes" style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #666; font-style: italic;">
+            "{{ order.notes }}"
+          </p>
         </div>
-      </ion-card-content>
-    </ion-card>
-  </ng-template>
+        <div style="text-align: right;">
+          <p style="margin: 0; font-weight: bold;">${{ order.total_price }}</p>
+          <ion-badge [color]="getStatusColor(order.status)" style="margin-top: 0.5rem;">{{ order.status }}</ion-badge>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Save as Favorite Modal -->
+  <ion-modal [isOpen]="showSaveFavModal" (ionModalDidDismiss)="showSaveFavModal = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="showSaveFavModal = false">Cancel</ion-button>
+          </ion-buttons>
+          <ion-title>Save as Favorite</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p>Give this order a name so you can quickly reorder it later!</p>
+        
+        <ion-item>
+          <ion-label position="floating">Favorite Name</ion-label>
+          <ion-input 
+            [(ngModel)]="favoriteName" 
+            placeholder="e.g., My Morning Coffee"
+            type="text">
+          </ion-input>
+        </ion-item>
+
+        <ion-button 
+          expand="block" 
+          color="primary" 
+          style="margin-top: 2rem;"
+          [disabled]="!favoriteName.trim()"
+          (click)="saveFavorite()">
+          SAVE FAVORITE
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Order Actions Sheet -->
+  <ion-action-sheet
+    [isOpen]="showActionSheet"
+    [buttons]="actionSheetButtons"
+    (didDismiss)="showActionSheet = false">
+  </ion-action-sheet>
+
+  <!-- Toast Notifications -->
+  <ion-toast
+    [isOpen]="showToast"
+    [message]="toastMessage"
+    [duration]="3000"
+    [color]="toastColor"
+    [position]="'top'"
+    (ionToastDidDismiss)="showToast = false">
+  </ion-toast>
 </ion-content>

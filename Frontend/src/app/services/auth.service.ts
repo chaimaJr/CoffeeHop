@@ -1,8 +1,9 @@
 // src/app/services/auth.service.ts
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -40,6 +41,31 @@ export class AuthService {
         this.token.set(res.token);
         this.currentUser.set(res.user);
       }));
+  }
+
+   /**
+   * Update user data in memory and localStorage
+   */
+  updateUserData(updatedUser: Partial<User>): void {
+    const current = this.currentUser();
+    if (current) {
+      const merged = { ...current, ...updatedUser };
+      this.currentUser.set(merged);
+      localStorage.setItem('user', JSON.stringify(merged));
+      console.log('✅ User data updated in AuthService');
+    }
+  }
+
+  /**
+   * Refresh user data from API
+   */
+  refreshUserData(): Observable<User> {
+    return this.http.get<User>(`${environment.apiUrl}/profile/`).pipe(
+      tap(user => {
+        this.currentUser.set(user);
+        localStorage.setItem('user', JSON.stringify(user));
+      })
+    );
   }
 
   logout() {

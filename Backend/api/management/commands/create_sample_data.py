@@ -212,29 +212,24 @@ class Command(BaseCommand):
         # Sample offers
         offers = [
             {
-                'title': 'Free Coffee',
-                'description': 'Get any regular coffee free',
-                'points_required': 50,
+                'title': 'Free Cookie',
+                'description': 'Get a Chocolate Chip Cookie for free!',
+                'points_required': 20,
             },
             {
-                'title': 'Free Dessert',
-                'description': 'Choose any dessert for free',
+                'title': 'Free Coffee',
+                'description': 'Get any coffee free!',
                 'points_required': 30,
             },
             {
+                'title': 'Free Dessert',
+                'description': 'Choose any dessert for free!',
+                'points_required': 50,
+            },
+            {
                 'title': '20% Off',
-                'description': '20% discount on your entire order',
+                'description': '20% discount on your entire order!',
                 'points_required': 75,
-            },
-            {
-                'title': 'Buy One Get One',
-                'description': 'BOGO on any coffee drink',
-                'points_required': 100,
-            },
-            {
-                'title': 'Free Upgrade',
-                'description': 'Upgrade any drink size for free',
-                'points_required': 25,
             },
         ]
         

@@ -1,95 +1,184 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Order</ion-title>
+    <ion-title>{{ isEditMode ? 'Update Order' : 'Place Order' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding">
   <!-- Loading State -->
-  <ion-spinner *ngIf="loading" name="crescent" style="display: flex; justify-content: center; margin: 2rem;"></ion-spinner>
-
-  <ng-container *ngIf="!loading">
-    <!-- Type Selector -->
-    <ion-segment [(ngModel)]="selectedType" (ionChange)="onTypeChange()">
-      <ion-segment-button value="COFFEE">
-        <ion-label>☕ Coffee</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="DESSERT">
-        <ion-label>🍰 Dessert</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-
-    <!-- Menu Items List -->
-    <ion-list>
-      <ion-item *ngFor="let item of filteredItems" [disabled]="!item.is_available" button (click)="addItem(item)">
-        <ion-label>
-          <h2>{{ item.title }}</h2>
-          <p style="color: #999;">{{ item.description }}</p>
-          <p style="margin-top: 0.5rem; color: #667eea; font-weight: bold;">${{ item.price }}</p>
-        </ion-label>
-        <ion-icon name="add" slot="end" [style.color]="item.is_available ? '#667eea' : '#ccc'"></ion-icon>
-      </ion-item>
-    </ion-list>
-
-    <div *ngIf="filteredItems.length === 0" style="padding: 2rem; text-align: center; color: #999;">
-      <p>No items available</p>
+   @if (loading) {
+    <div style="display: flex; justify-content: center; margin: 2rem;">
+      <ion-spinner name="crescent"></ion-spinner>
     </div>
-  </ng-container>
+  }
 
-  <!-- Item Detail Modal -->
-  <ion-modal [isOpen]="showItemDetail" (ionDismiss)="showItemDetail = false">
-    <ng-template ionModalContent *ngIf="selectedItem">
-      <ion-header [translucent]="true">
-        <ion-toolbar>
-          <ion-buttons slot="start">
-            <ion-button (click)="showItemDetail = false">Cancel</ion-button>
-          </ion-buttons>
-          <ion-title>{{ selectedItem.title }}</ion-title>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding">
-        <p>{{ selectedItem.description }}</p>
-        <p>Price: <strong>${{ selectedItem.price }}</strong></p>
-        <p>Prep Time: {{ selectedItem.preparation_time }} mins</p>
+  <!-- Error Message -->
+   @if (error) {
+    <ion-card color="danger">
+      <ion-card-content>{{ error }}</ion-card-content>
+    </ion-card>
+  }
+  
+  @if (!loading) { 
+    <ng-container>
+      <!-- STEP 1: Choose Base Coffee -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>1. Choose Your Coffee ☕</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-radio-group [(ngModel)]="selectedCoffee">
+            <ion-list>
+              <ion-item *ngFor="let coffee of coffees">
+                <ion-radio [value]="coffee" (ionSelect)="selectCoffee(coffee)">
+                  <div style="display: flex; flex-direction: column; padding-left: 12px;">
+                    <strong>{{ coffee.title }}</strong>
+                    <span style="color: #666; font-size: 0.9rem;">{{ coffee.description }}</span>
+                    <span style="color: #667eea; font-weight: bold; margin-top: 4px;">${{ coffee.price }}</span>
+                  </div>
+                </ion-radio>
+              </ion-item>
+            </ion-list>
+          </ion-radio-group>
 
-        <ion-item>
-          <ion-label>Quantity</ion-label>
-          <ion-input 
-            type="number" 
-            [(ngModel)]="itemQuantity" 
-            min="1"
-            inputmode="numeric">
-          </ion-input>
-        </ion-item>
+          <p *ngIf="coffees.length === 0" style="color: #999; text-align: center; padding: 1rem;">
+            No coffees available
+          </p>
+        </ion-card-content>
+      </ion-card>
 
-        <ion-item>
-          <ion-label position="floating">Special Notes (optional)</ion-label>
-          <ion-textarea 
-            [(ngModel)]="itemNotes" 
-            placeholder="e.g., extra shot, almond milk">
-          </ion-textarea>
-        </ion-item>
+      <!-- STEP 2: Choose Toppings (if you have them) -->
+      <ion-card *ngIf="toppings.length > 0">
+        <ion-card-header>
+          <ion-card-title>2. Add Toppings (Optional) 🥛</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item *ngFor="let topping of toppings">
+              <ion-checkbox 
+                [checked]="isToppingSelected(topping)"
+                (ionChange)="toggleTopping(topping)">
+                <div style="display: flex; justify-content: space-between; width: 100%; padding-left: 12px;">
+                  <div>
+                    <strong>{{ topping.title }}</strong>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ topping.description }}</p>
+                  </div>
+                  <span style="color: #667eea; font-weight: bold;">${{ topping.price }}</span>
+                </div>
+              </ion-checkbox>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
 
+      <!-- STEP 3: Add Desserts -->
+      <ion-card *ngIf="desserts.length > 0">
+        <ion-card-header>
+          <ion-card-title>3. Add Desserts (Optional) 🍰</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item *ngFor="let dessert of desserts">
+              <ion-checkbox 
+                [checked]="isDessertSelected(dessert)"
+                (ionChange)="toggleDessert(dessert)">
+                <div style="display: flex; justify-content: space-between; width: 100%; padding-left: 12px;">
+                  <div>
+                    <strong>{{ dessert.title }}</strong>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ dessert.description }}</p>
+                  </div>
+                  <span style="color: #667eea; font-weight: bold;">${{ dessert.price }}</span>
+                </div>
+              </ion-checkbox>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- STEP 4: Quantity & Notes -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>4. Quantity & Notes</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item>
+            <ion-label>Quantity</ion-label>
+            <ion-input 
+              type="number" 
+              [(ngModel)]="quantity" 
+              min="1"
+              max="10"
+              inputmode="numeric">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="floating">Special Instructions (Optional)</ion-label>
+            <ion-textarea 
+              [(ngModel)]="notes" 
+              rows="3"
+              placeholder="e.g., Extra hot, no sugar, almond milk">
+            </ion-textarea>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Order Summary -->
+      <ion-card *ngIf="selectedCoffee">
+        <ion-card-header>
+          <ion-card-title>Order Summary</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>☕ {{ selectedCoffee.title }}</span>
+              <span>${{ selectedCoffee.price }}</span>
+            </div>
+
+            <div *ngFor="let topping of selectedToppings" style="display: flex; justify-content: space-between; color: #666;">
+              <span>+ {{ topping.title }}</span>
+              <span>${{ topping.price }}</span>
+            </div>
+
+            <div *ngFor="let dessert of selectedDesserts" style="display: flex; justify-content: space-between; color: #666;">
+              <span>🍰 {{ dessert.title }}</span>
+              <span>${{ dessert.price }}</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; color: #666; margin-top: 8px;">
+              <span>Quantity</span>
+              <span>× {{ quantity }}</span>
+            </div>
+
+            <div style="border-top: 2px solid #ddd; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #667eea;">
+              <span>Total</span>
+              <span>${{ totalPrice.toFixed(2) }}</span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px; margin-top: 1rem; margin-bottom: 2rem;">
         <ion-button 
           expand="block" 
-          color="primary" 
-          style="margin-top: 2rem;" 
-          (click)="confirmAdd()">
-          ADD TO CART
+          fill="outline"
+          [disabled]="submitting"
+          (click)="resetOrder()"
+          style="flex: 1;">
+          Reset
         </ion-button>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
-
-  <!-- Cart Floating Button -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="cart.length > 0">
-    <ion-fab-button 
-      color="primary" 
-      (click)="goToCheckout()">
-      <ion-icon name="cart"></ion-icon>
-      <ion-badge color="danger" *ngIf="itemCount > 0">
-        {{ itemCount }}
-      </ion-badge>
-    </ion-fab-button>
-  </ion-fab>
+        
+        <ion-button 
+          expand="block" 
+          color="primary"
+          [disabled]="!canPlaceOrder || submitting"
+          (click)="placeOrder()"
+          style="flex: 2;">
+          <ion-spinner *ngIf="submitting" name="crescent" style="margin-right: 8px;"></ion-spinner>
+          {{ submitting ? (isEditMode ? 'Updating...' : 'Placing...') : (isEditMode ? 'Update Order' : 'Place Order') }}
+        </ion-button>
+      </div>
+    </ng-container>
+  }
 </ion-content>

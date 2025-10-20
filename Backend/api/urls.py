@@ -36,6 +36,8 @@ router.register(r'favourites', views.FavouriteOrderViewSet, basename='favourite'
 # Loyalty offers (read-only): /api/loyalty-offers/
 router.register(r'loyalty-offers', views.LoyaltyOfferViewSet, basename='loyaltyoffer')
 
+router.register(r'loyalty-redemptions', views.LoyaltyRedemptionViewSet, basename='loyaltyredemption')  # ADD THIS LINE
+
 # Notifications (read-only with mark actions): /api/notifications/
 router.register(r'notifications', views.NotificationViewSet, basename='notification')
 
