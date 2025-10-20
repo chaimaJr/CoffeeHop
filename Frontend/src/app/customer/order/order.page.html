@@ -1,19 +1,17 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>{{ isEditMode ? 'Update Order' : 'Place Order' }}</ion-title>
+    <ion-title>Place Order</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <!-- Loading State -->
-   @if (loading) {
+  @if (loading) {
     <div style="display: flex; justify-content: center; margin: 2rem;">
       <ion-spinner name="crescent"></ion-spinner>
     </div>
   }
 
-  <!-- Error Message -->
-   @if (error) {
+  @if (error) {
     <ion-card color="danger">
       <ion-card-content>{{ error }}</ion-card-content>
     </ion-card>
@@ -21,7 +19,6 @@
   
   @if (!loading) { 
     <ng-container>
-      <!-- STEP 1: Choose Base Coffee -->
       <ion-card>
         <ion-card-header>
           <ion-card-title>1. Choose Your Coffee ☕</ion-card-title>
@@ -47,31 +44,6 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- STEP 2: Choose Toppings (if you have them) -->
-      <ion-card *ngIf="toppings.length > 0">
-        <ion-card-header>
-          <ion-card-title>2. Add Toppings (Optional) 🥛</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-list>
-            <ion-item *ngFor="let topping of toppings">
-              <ion-checkbox 
-                [checked]="isToppingSelected(topping)"
-                (ionChange)="toggleTopping(topping)">
-                <div style="display: flex; justify-content: space-between; width: 100%; padding-left: 12px;">
-                  <div>
-                    <strong>{{ topping.title }}</strong>
-                    <p style="margin: 0; color: #666; font-size: 0.9rem;">{{ topping.description }}</p>
-                  </div>
-                  <span style="color: #667eea; font-weight: bold;">${{ topping.price }}</span>
-                </div>
-              </ion-checkbox>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- STEP 3: Add Desserts -->
       <ion-card *ngIf="desserts.length > 0">
         <ion-card-header>
           <ion-card-title>3. Add Desserts (Optional) 🍰</ion-card-title>
@@ -95,7 +67,6 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- STEP 4: Quantity & Notes -->
       <ion-card>
         <ion-card-header>
           <ion-card-title>4. Quantity & Notes</ion-card-title>
@@ -123,7 +94,6 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- Order Summary -->
       <ion-card *ngIf="selectedCoffee">
         <ion-card-header>
           <ion-card-title>Order Summary</ion-card-title>
@@ -133,11 +103,6 @@
             <div style="display: flex; justify-content: space-between;">
               <span>☕ {{ selectedCoffee.title }}</span>
               <span>${{ selectedCoffee.price }}</span>
-            </div>
-
-            <div *ngFor="let topping of selectedToppings" style="display: flex; justify-content: space-between; color: #666;">
-              <span>+ {{ topping.title }}</span>
-              <span>${{ topping.price }}</span>
             </div>
 
             <div *ngFor="let dessert of selectedDesserts" style="display: flex; justify-content: space-between; color: #666;">
@@ -158,7 +123,6 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- Action Buttons -->
       <div style="display: flex; gap: 12px; margin-top: 1rem; margin-bottom: 2rem;">
         <ion-button 
           expand="block" 
@@ -176,7 +140,7 @@
           (click)="placeOrder()"
           style="flex: 2;">
           <ion-spinner *ngIf="submitting" name="crescent" style="margin-right: 8px;"></ion-spinner>
-          {{ submitting ? (isEditMode ? 'Updating...' : 'Placing...') : (isEditMode ? 'Update Order' : 'Place Order') }}
+          {{ submitting ? 'Placing...' : 'Place Order' }}
         </ion-button>
       </div>
     </ng-container>

@@ -302,13 +302,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         GET /api/orders/queue/
         Returns orders with status RECEIVED or PREPARING, ordered by creation time.
         """
-        # Get orders that need attention
-        orders = Order.objects.filter(
+        orders = Order.objects.prefetch_related(
+            'items__menu_item'  # Load order items and their menu items efficiently
+        ).filter(
             status__in=[Order.OrderStatus.RECEIVED, Order.OrderStatus.PREPARING]
         ).order_by('created_at')
-        
-        serializer = OrderListSerializer(orders, many=True)
+    
+        # Use full OrderSerializer instead of OrderListSerializer to include items
+        serializer = OrderSerializer(orders, many=True, context={'request': request})
         return Response(serializer.data)
+        
+        # orders = Order.objects.filter(
+        #     status__in=[Order.OrderStatus.RECEIVED, Order.OrderStatus.PREPARING]
+        # ).order_by('created_at')
+        
+        # serializer = OrderListSerializer(orders, many=True)
+        # return Response(serializer.data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsBaristaOrAdmin])
     def update_status(self, request, pk=None):

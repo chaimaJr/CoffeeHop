@@ -80,7 +80,6 @@ addIcons({
     IonModal,
     IonButtons,
     IonInput,
-    IonActionSheet,
     IonRefresher,
     IonRefresherContent,
     IonSpinner,
@@ -107,10 +106,6 @@ export class HomePage implements OnInit {
   showSaveFavModal = false;
   favoriteName = '';
 
-  // Action sheet
-  showActionSheet = false;
-  actionSheetButtons: any[] = [];
-
   // Toast notifications
   showToast = false;
   toastMessage = '';
@@ -132,40 +127,48 @@ export class HomePage implements OnInit {
     // Load recent orders
     this.apiService.getMyOrders().subscribe({
       next: (orders: any) => {
-        const orderList = Array.isArray(orders)
-          ? orders
-          : orders?.results || [];
+        let orderList = orders?.results.filter(
+          (order: any) => order.status !== 'COMPLETED'
+        );;
+
+        // Assign the filtered and sliced list
         this.recentOrders = orderList.slice(0, 5);
-        console.log('✅ Recent orders loaded:', this.recentOrders.length);
+        this.refreshUserProfile();
+        
+        console.log('Recent orders loaded:', this.recentOrders.length);
       },
-      error: (err) => console.error('❌ Failed to load orders', err),
+      error: (err) => console.error('Failed to load orders', err),
     });
 
     // Load favourites
     this.apiService.getFavourites().subscribe({
       next: (favs: any) => {
         this.favourites = Array.isArray(favs) ? favs : favs?.results || [];
-        console.log('✅ Favourites loaded:', this.favourites.length);
+        console.log('Favourites loaded:', this.favourites.length);
         this.loading = false;
       },
       error: (err) => {
-        console.error('❌ Failed to load favourites', err);
+        console.error('Failed to load favourites', err);
         this.loading = false;
       },
     });
   }
 
+  onFavoriteClick(fav: Favourite): void {
+    this.router.navigate(['/order-details', fav.template_order]);
+  }
+  
   refreshUserProfile(): void {
     // Refresh user profile to get updated loyalty points
     this.apiService.getProfile().subscribe({
       next: (userData) => {
         this.authService.updateUserData(userData);
         console.log(
-          '✅ User profile refreshed, points:',
+          'User profile refreshed, points:',
           userData.loyalty_points
         );
       },
-      error: (err) => console.error('❌ Failed to refresh profile', err),
+      error: (err) => console.error('Failed to refresh profile', err),
     });
   }
 
@@ -179,7 +182,7 @@ export class HomePage implements OnInit {
   showToastMessage(
     message: string,
     color: 'success' | 'danger' | 'warning' = 'success'
-  ): void {
+  ) {
     this.toastMessage = message;
     this.toastColor = color;
     this.showToast = true;
@@ -190,77 +193,15 @@ export class HomePage implements OnInit {
       RECEIVED: 'warning',
       PREPARING: 'primary',
       READY: 'success',
-      COMPLETED: 'medium',
-      CANCELLED: 'danger',
     };
     return colors[status] || 'medium';
   }
 
   
   onOrderClick(order: Order): void {
-    // if (order.status === 'RECEIVED') {
-      // If the order is new, show options to modify it
-      // this.openOrderActions(order);
-    // } else {
-      // Otherwise, just navigate to details page
       this.router.navigate(['/order-details', order.id]);
-    // }
   }
 
-  openOrderActions(order: Order): void {
-    this.selectedOrder = order;
-
-    this.actionSheetButtons = [
-      {
-        text: 'Save as Favorite',
-        icon: 'heart-outline',
-        handler: () => this.openSaveFavoriteModal(order),
-      },
-    ];
-
-    // Only allow updates if order is RECEIVED
-    if (order.status === 'RECEIVED') {
-      this.actionSheetButtons.push({
-        text: 'Update Order',
-        icon: 'create-outline',
-        handler: () => this.updateOrder(order),
-      });
-      this.actionSheetButtons.push({
-        text: 'Cancel Order',
-        icon: 'trash-outline',
-        role: 'destructive',
-        handler: () => this.cancelOrder(order),
-      });
-    }
-
-    this.actionSheetButtons.push({
-      text: 'Close',
-      role: 'cancel',
-    });
-
-    this.showActionSheet = true;
-  }
-
-  updateOrder(order: Order): void {
-    // Navigate to order page with order data for editing
-    this.router.navigate(['/tabs/order'], {
-      state: { editOrder: order },
-    });
-  }
-
-  cancelOrder(order: Order): void {
-    if (confirm('Are you sure you want to cancel this order?')) {
-      this.apiService.cancelOrder(order.id).subscribe({
-        next: () => {
-          this.recentOrders = this.recentOrders.filter(
-            (o) => o.id !== order.id
-          );
-          console.log('✅ Order cancelled');
-        },
-        error: (err) => console.error('❌ Failed to cancel order', err),
-      });
-    }
-  }
 
   openSaveFavoriteModal(order: Order): void {
     this.selectedOrder = order;
@@ -278,11 +219,11 @@ export class HomePage implements OnInit {
           this.favourites.push(fav);
           this.showSaveFavModal = false;
           this.favoriteName = '';
-          console.log('✅ Favorite saved to database');
+          console.log('Favorite saved to database');
           this.showToastMessage(`"${fav.name}" saved to favorites!`, 'success');
         },
         error: (err) => {
-          console.error('❌ Failed to save favorite', err);
+          console.error('Failed to save favorite', err);
           this.showToastMessage(
             'Failed to save favorite. Please try again.',
             'danger'
@@ -294,13 +235,12 @@ export class HomePage implements OnInit {
   reorderFavorite(fav: Favourite): void {
     this.apiService.reorderFromFavourite(fav.id).subscribe({
       next: (order) => {
-        console.log('✅ Reordered from favorite');
+        console.log('Reordered from favorite');
         this.showToastMessage('Order placed successfully!', 'success');
-        this.router.navigate(['/tabs/home']);
         this.loadData();
       },
       error: (err) => {
-        console.error('❌ Failed to reorder', err);
+        console.error('Failed to reorder', err);
         this.showToastMessage('Failed to reorder. Please try again.', 'danger');
       },
     });

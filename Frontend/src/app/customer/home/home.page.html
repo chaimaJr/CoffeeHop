@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>☕ Coffee Shop</ion-title>
+    <ion-title size="small">CoffeeHop</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -29,7 +29,7 @@
 
   <!-- New Order Button -->
   <ion-button expand="block" color="primary" routerLink="/tabs/order" style="margin: 1rem;">
-    📍 NEW ORDER
+    NEW ORDER
   </ion-button>
 
   <!-- Favourite Orders Section -->
@@ -40,7 +40,7 @@
   <ion-card *ngFor="let fav of favourites" style="margin: 0.5rem 1rem;">
     <ion-card-content>
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1;">
+        <div (click)="onFavoriteClick(fav)" style="flex: 1;">
           <p style="margin: 0; font-weight: bold;">{{ fav.name }}</p>
           <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #999;">Saved {{ fav.created_at | date: 'short' }}</p>
         </div>
@@ -125,13 +125,7 @@
     </ng-template>
   </ion-modal>
 
-  <!-- Order Actions Sheet -->
-  <ion-action-sheet
-    [isOpen]="showActionSheet"
-    [buttons]="actionSheetButtons"
-    (didDismiss)="showActionSheet = false">
-  </ion-action-sheet>
-
+ 
   <!-- Toast Notifications -->
   <ion-toast
     [isOpen]="showToast"
