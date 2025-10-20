@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { home, cart, person } from 'ionicons/icons';
+import { home, person, cafe } from 'ionicons/icons';
 import { RouterModule } from '@angular/router';
 
-addIcons({ home, cart, person });
+addIcons({ home, cafe, person });
 
 @Component({
   selector: 'app-tabs',

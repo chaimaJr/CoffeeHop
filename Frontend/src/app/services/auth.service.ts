@@ -23,9 +23,16 @@ export class AuthService {
     }
   }
 
+  // In auth.service.ts
+
   login(username: string, password: string) {
     return this.http.post(`${environment.apiUrl}/login/`, { username, password })
       .pipe(tap((res: any) => {
+        
+        if (res.user && res.user.role) {
+          res.user.role = res.user.role;
+        }
+
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
         this.token.set(res.token);
@@ -36,6 +43,11 @@ export class AuthService {
   register(data: any) {
     return this.http.post(`${environment.apiUrl}/register/`, data)
       .pipe(tap((res: any) => {
+
+        if (res.user && res.user.role) {
+          res.user.role = res.user.role;
+        }
+
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
         this.token.set(res.token);

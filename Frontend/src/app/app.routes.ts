@@ -1,8 +1,6 @@
-// ============================================================================
-// src/app/app.routes.ts (FIXED)
-// ============================================================================
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { baristaGuard } from './guards/barista-guard';
 
 export const routes: Routes = [
   {
@@ -11,7 +9,7 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
-  // ===== AUTH ROUTES (No Guard) =====
+  // ===== AUTH ROUTES =====
   {
     path: 'login',
     loadComponent: () =>
@@ -23,14 +21,14 @@ export const routes: Routes = [
       import('./auth/register/register.page').then((m) => m.RegisterPage),
   },
 
-  // ===== CUSTOMER ROUTES (With Guard) =====
+  // ===== CUSTOMER ROUTES =====
   {
     path: 'tabs',
     canActivate: [authGuard],
+    data: { roles: ['CUSTOMER'] },
     loadComponent: () =>
       import('./customer/tabs/tabs.page').then((m) => m.TabsPage),
     children: [
-      // Default route - redirect /tabs to /tabs/home
       {
         path: '',
         redirectTo: 'home',
@@ -49,34 +47,31 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./customer/profile/profile.page').then(
-            (m) => m.ProfilePage
-          ),
+          import('./customer/profile/profile.page').then((m) => m.ProfilePage),
       },
     ],
   },
-
-  // ===== CHECKOUT ROUTE =====
   {
-    path: 'checkout',
+    path: 'order-details/:id',
     canActivate: [authGuard],
-    loadComponent: () =>
-      import('./customer/checkout/checkout.page').then(
-        (m) => m.CheckoutPage
-      ),
+    data: { roles: ['CUSTOMER'] },
+    loadComponent: () => import('./customer/order-details/order-details.page').then( m => m.OrderDetailsPage)
   },
+
 
   // ===== BARISTA ROUTES =====
   {
     path: 'barista',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./barista/queue/queue.page').then((m) => m.QueuePage),
+    canActivate: [baristaGuard],
+    loadComponent: () => 
+      import('./barista/barista-home/barista-home.page').then(m => m.BaristaHomePage)
   },
 
-  // ===== CATCH-ALL (must be last) =====
+
+  // Other
   {
     path: '**',
     redirectTo: '/login',
   },
+
 ];

@@ -1,21 +1,53 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>login</ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Login</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding" [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">login</ion-title>
+      <ion-title size="large">Login</ion-title>
     </ion-toolbar>
   </ion-header>
-  <ion-item>
-    <ion-input label="Username" [(ngModel)]="username"></ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-input label="Password" type="password" [(ngModel)]="password"></ion-input>
-  </ion-item>
-  <ion-button expand="block" (click)="login()">Login</ion-button>
-</ion-content>
 
+  <ion-item>
+    <ion-input 
+      label="Username" 
+      label-placement="floating"
+      [(ngModel)]="username"
+      (ionInput)="error = null">
+    </ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-input 
+      label="Password" 
+      label-placement="floating"
+      type="password" 
+      [(ngModel)]="password"
+      (ionInput)="error = null">
+    </ion-input>
+  </ion-item>
+
+  <ion-text color="danger" *ngIf="error" class="ion-padding-start">
+    <p>{{ error }}</p>
+  </ion-text>
+
+  <div class="ion-padding-top">
+    <ion-button 
+      expand="block" 
+      (click)="login()" 
+      [disabled]="loading">
+      <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+      <span *ngIf="!loading">Login</span>
+    </ion-button>
+  </div>
+
+  <div class="ion-text-center ion-padding-top">
+    <ion-button fill="clear" (click)="goToRegister()">
+      Don't have an account? Sign Up
+    </ion-button>
+  </div>
+
+</ion-content>

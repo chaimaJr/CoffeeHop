@@ -1,7 +1,8 @@
 import { MenuItem } from "./menu-item.model";
 
 export interface OrderItem {
-  menu_item: MenuItem;
+  menu_item: number;          
+  menu_item_detail: MenuItem;
   quantity: number;
   customizations: string;
   price: number;

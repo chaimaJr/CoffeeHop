@@ -14,35 +14,91 @@
   </div>
 
   <form [formGroup]="form" (ngSubmit)="onRegister()" style="padding: 1rem;">
+    
     <ion-item>
+      <ion-label position="floating">First Name</ion-label>
+      <ion-input 
+        type="text" 
+        formControlName="first_name"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+    <div *ngIf="form.get('first_name')?.invalid && form.get('first_name')?.touched" class="validation-error">
+      First name is required.
+    </div>
+
+    <ion-item class="form-item">
+      <ion-label position="floating">Last Name</ion-label>
+      <ion-input 
+        type="text" 
+        formControlName="last_name"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item> <div *ngIf="form.get('last_name')?.invalid && form.get('last_name')?.touched" class="validation-error">
+      Last name is required.
+    </div>
+
+    <ion-item class="form-item">
+      <ion-label position="floating">Phone</ion-label>
+      <ion-input 
+        type="tel" 
+        formControlName="phone"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+    <div *ngIf="form.get('phone')?.invalid && form.get('phone')?.touched" class="validation-error">
+      Phone number is required.
+    </div>
+
+    <ion-item class="form-item">
       <ion-label position="floating">Username</ion-label>
       <ion-input 
         type="text" 
         formControlName="username"
-        placeholder="johndoe"
         [disabled]="loading">
       </ion-input>
     </ion-item>
+    <div *ngIf="form.get('username')?.invalid && form.get('username')?.touched" class="validation-error">
+      <div *ngIf="form.get('username')?.hasError('required')">Username is required.</div>
+      <div *ngIf="form.get('username')?.hasError('minlength')">Username must be at least 3 characters.</div>
+    </div>
 
-    <ion-item style="margin-top: 1rem;">
+    <ion-item class="form-item">
       <ion-label position="floating">Email</ion-label>
       <ion-input 
         type="email" 
         formControlName="email"
-        placeholder="you@example.com"
         [disabled]="loading">
       </ion-input>
     </ion-item>
+    <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="validation-error">
+      Please enter a valid email.
+    </div>
 
-    <ion-item style="margin-top: 1rem;">
+    <ion-item class="form-item">
       <ion-label position="floating">Password</ion-label>
       <ion-input 
         type="password" 
         formControlName="password"
-        placeholder="••••••"
         [disabled]="loading">
       </ion-input>
     </ion-item>
+    <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" class="validation-error">
+      Password must be at least 6 characters.
+    </div>
+
+    <ion-item class="form-item">
+      <ion-label position="floating">Confirm Password</ion-label>
+      <ion-input 
+        type="password" 
+        formControlName="password_confirm"
+        [disabled]="loading">
+      </ion-input>
+    </ion-item>
+    <div *ngIf="passwordConfirm?.invalid && (passwordConfirm?.touched)" class="validation-error">
+      <div *ngIf="passwordConfirm?.hasError('required')">Please confirm your password.</div>
+      <div *ngIf="passwordConfirm?.hasError('mismatch')">Passwords do not match.</div>
+    </div>
 
     <ion-button 
       expand="block" 
@@ -53,9 +109,7 @@
       <ion-spinner *ngIf="loading" name="crescent" style="margin-right: 0.5rem;"></ion-spinner>
       {{ loading ? 'Creating Account...' : 'Sign Up' }}
     </ion-button>
-  </form>
-
-  <div style="text-align: center; margin-top: 2rem;">
+  </form> <div style="text-align: center; margin-top: 2rem;">
     <p>Already have an account? 
       <ion-router-link [routerLink]="['/login']" style="color: #667eea; text-decoration: none; font-weight: bold;">
         Login
@@ -67,7 +121,8 @@
     [isOpen]="!!error" 
     [message]="error || ''" 
     color="danger" 
-    duration="3000" 
-    (didDismiss)="error = null">
+    [duration]="5000" 
+    (didDismiss)="error = null"
+    [position]="'top'">
   </ion-toast>
 </ion-content>

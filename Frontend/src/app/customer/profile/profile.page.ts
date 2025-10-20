@@ -1,23 +1,43 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, IonLabel, IonButton, IonIcon, IonList, IonListHeader, IonBadge, IonModal, IonButtons, IonInput, IonSpinner, IonToast } from '@ionic/angular/standalone';
+import { Component, OnInit } from '@angular/core';
+import { LoyaltyOffer } from 'src/app/models/loyalty-offer.model';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonItem,
+  IonLabel,
+  IonButton,
+  IonIcon,
+  IonList,
+  IonListHeader,
+  IonBadge,
+  IonModal,
+  IonButtons,
+  IonInput,
+  IonSpinner,
+  IonToast,
+} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { ApiService } from 'src/app/services/api.service';
 import { addIcons } from 'ionicons';
-import { logOut, star, person, notifications, gift, createOutline } from 'ionicons/icons';
-import { ViewWillEnter } from '@ionic/angular';
+import {
+  logOut,
+  star,
+  person,
+  notifications,
+  gift,
+  createOutline, chevronBackOutline } from 'ionicons/icons';
+import { AlertController } from '@ionic/angular';
 
-addIcons({ logOut, star, person, notifications, gift, createOutline });
-
-interface LoyaltyOffer {
-  id: number;
-  title: string;
-  description: string;
-  points_required: number;
-  is_active: boolean;
-}
+addIcons({ logOut, star, person, notifications, gift, createOutline, chevronBackOutline });
 
 @Component({
   selector: 'app-profile',
@@ -43,19 +63,24 @@ interface LoyaltyOffer {
     IonButtons,
     IonInput,
     IonSpinner,
-    IonToast
+    IonToast,
   ],
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
 })
 export class ProfilePage implements OnInit {
-  private authService = inject(AuthService);
-  private apiService = inject(ApiService);
-  private router = inject(Router);
+  
+  constructor(
+    private authService: AuthService,
+    private apiService: ApiService,
+    private router: Router,
+    private alertController: AlertController
+  ) {
+      addIcons({createOutline,star,logOut,chevronBackOutline});}
 
   user = this.authService.currentUser;
   loyaltyOffers: LoyaltyOffer[] = [];
-  
+
   showEditProfileModal = false;
   editPhone = '';
   updatingProfile = false;
@@ -66,7 +91,7 @@ export class ProfilePage implements OnInit {
   toastMessage = '';
   toastColor: 'success' | 'danger' | 'warning' = 'success';
 
-  // Redemption
+  // Loyalty points Redemption
   redeemingOfferId: number | null = null;
 
   ngOnInit(): void {
@@ -77,17 +102,14 @@ export class ProfilePage implements OnInit {
   }
 
   loadLoyaltyOffers(): void {
-    this.loadingOffers = true;
     this.apiService.getLoyaltyOffers().subscribe({
       next: (offers: any) => {
-        this.loyaltyOffers = Array.isArray(offers) ? offers : offers?.results || [];
-        console.log('✅ Loyalty offers loaded:', this.loyaltyOffers.length);
-        this.loadingOffers = false;
+        this.loyaltyOffers = offers?.results || [];
+        console.log('Loyalty offers loaded:', this.loyaltyOffers.length);
       },
       error: (err) => {
-        console.error('❌ Failed to load loyalty offers', err);
-        this.loadingOffers = false;
-      }
+        console.error('Failed to load loyalty offers', err);
+      },
     });
   }
 
@@ -98,7 +120,7 @@ export class ProfilePage implements OnInit {
 
   updateProfile(): void {
     this.updatingProfile = true;
-    
+
     this.apiService.updateProfile({ phone: this.editPhone }).subscribe({
       next: (updated) => {
         console.log('✅ Profile updated');
@@ -111,7 +133,7 @@ export class ProfilePage implements OnInit {
         console.error('❌ Failed to update profile', err);
         this.updatingProfile = false;
         this.showToastMessage('Failed to update profile', 'danger');
-      }
+      },
     });
   }
 
@@ -122,11 +144,16 @@ export class ProfilePage implements OnInit {
 
   redeemOffer(offer: LoyaltyOffer): void {
     if (!this.canRedeemOffer(offer)) {
-      this.showToastMessage('Not enough points to redeem this offer', 'warning');
+      this.showToastMessage(
+        'Not enough points to redeem this offer',
+        'warning'
+      );
       return;
     }
 
-    if (!confirm(`Redeem "${offer.title}" for ${offer.points_required} points?`)) {
+    if (
+      !confirm(`Redeem "${offer.title}" for ${offer.points_required} points?`)
+    ) {
       return;
     }
 
@@ -135,22 +162,24 @@ export class ProfilePage implements OnInit {
     this.apiService.redeemLoyaltyOffer(offer.id).subscribe({
       next: (response) => {
         console.log('✅ Offer redeemed:', response);
-        
+
         // Update user's loyalty points
         const currentUser = this.user();
         if (currentUser) {
           const updatedUser = {
             ...currentUser,
-            loyalty_points: currentUser.loyalty_points - offer.points_required
+            loyalty_points: currentUser.loyalty_points - offer.points_required,
           };
           this.authService.updateUserData(updatedUser);
         }
 
         this.showToastMessage(
-          `🎉 ${offer.title} redeemed! Use code: ${response.redemption_code || 'N/A'}`,
+          `🎉 ${offer.title} redeemed! Use code: ${
+            response.redemption_code || 'N/A'
+          }`,
           'success'
         );
-        
+
         this.redeemingOfferId = null;
       },
       error: (err) => {
@@ -160,11 +189,14 @@ export class ProfilePage implements OnInit {
           'danger'
         );
         this.redeemingOfferId = null;
-      }
+      },
     });
   }
 
-  showToastMessage(message: string, color: 'success' | 'danger' | 'warning' = 'success'): void {
+  showToastMessage(
+    message: string,
+    color: 'success' | 'danger' | 'warning' = 'success'
+  ): void {
     this.toastMessage = message;
     this.toastColor = color;
     this.showToast = true;

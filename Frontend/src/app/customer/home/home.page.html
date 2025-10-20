@@ -72,7 +72,7 @@
   </div>
 
   <!-- Orders List -->
-  <ion-card *ngFor="let order of recentOrders" style="margin: 0.5rem 1rem;" (click)="openOrderActions(order)">
+  <ion-card *ngFor="let order of recentOrders" style="margin: 0.5rem 1rem;" (click)="onOrderClick(order)">
     <ion-card-content>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
