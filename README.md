@@ -21,8 +21,9 @@ CoffeeHop enables customers to browse a coffee shop’s menu, place orders (pick
 ## Features
 
 - Browse menu by category (coffee, tea, snacks, etc.)  
-- Add items to cart and place orders  
-- Order status tracking  
+- Place orders and get loyality points
+- Track order status in real-time
+- Redeem loyality points in special offers
 - User authentication (signup / login)
 - Responsive UI (mobile-first)
 
