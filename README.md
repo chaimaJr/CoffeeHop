@@ -1,41 +1,61 @@
 # CoffeeHop
 
-An Ionic + Django coffee shop ordering app.  
-CoffeeHop enables customers to browse a coffee shop’s menu, place orders (pickup or delivery), and manage their orders. On the admin side (Django backend), the shop owner can manage menu items, orders, and view order history.
+An Ionic + Django coffee shop ordering app. CoffeeHop provides a mobile/web UI (Ionic + Angular) for customers and a REST API backend (Django REST Framework) for business logic, persistence and realtime updates.
 
 ---
 
 ## Table of Contents
 
-- [Features](#features)  
-- [Usd Technologies](#architecture--tech-stack)  
+- [Features](#role-based-features)  
+- [Architecture](#architecture)  
 - [Getting Started](#getting-started)  
   - [Prerequisites](#prerequisites)  
   - [Backend Setup (Django)](#backend-setup-django)  
   - [Frontend Setup (Ionic)](#frontend-setup-ionic)  
-- [Usage](#usage)  
 - [API endpoints](#api-endpoints)
 
----
 
-## Features
-
-- Browse menu by category (coffee, tea, snacks, etc.)  
-- Place orders and get loyality points
-- Track order status in real-time
-- Redeem loyality points in special offers
-- User authentication (signup / login)
-- Responsive UI (mobile-first)
 
 ---
 
-## Used Technologies
+## Role-based Features
 
-| Layer        | Framework / Technology     |
-|--------------|-----------------------------|
-| Backend      | Django + Django REST Framework |
-| Frontend     | Ionic + Angular              |
+The project enforces role-based access at the API level using a custom User model with three roles: CUSTOMER, BARISTA, ADMIN.
 
+Customer:
+- Register, login, update their profile.
+- Browse available menu items.
+- Create orders (immediate or scheduled).
+- Update or cancel their own orders only while order status is RECEIVED.
+- Save orders as favourites and reorder from favourites.
+- View loyalty points and redeem offers.
+- View their notifications.
+
+Barista:
+- Access the order queue.
+- Change order status (PREPARING / READY / COMPLETED).
+- Create and update menu items (via API endpoints protected to barista/admin).
+- Mark loyalty redemptions as used.
+
+Admin:
+- Full access: create/update/delete menu items, manage offers, view and modify all orders.
+- Access Django admin site (/admin/) for full data management.
+- Can delete resources that baristas cannot (e.g., menu item DELETE limited to admin).
+
+---
+
+## Architecture
+
+Overview
+- Frontend (Ionic + Angular)
+  - Runs in browser or as a mobile app via Capacitor.
+  - Handles UI, local cart state, authentication token storage, WebSocket client for realtime updates.
+  - Communicates with backend via REST API (HTTP) and WebSocket (Channels).
+- Backend (Django + DRF + Channels)
+  - Exposes REST endpoints (authentication, menu, orders, favourites, loyalty, notifications).
+  - Persists data in a relational DB (SQLite by default for dev; Postgres recommended for production).
+  - Uses Django Channels for WebSocket support to power realtime order status updates.
+  - Uses TokenAuthentication for mobile clients (Authorization: Token <key>).
 
 ---
 
@@ -50,17 +70,8 @@ CoffeeHop enables customers to browse a coffee shop’s menu, place orders (pick
 - Node.js v20.11.x  
 - Ionic CLI v7.2.x  
 
-### Installation
 
-#### 1. Clone the Repository
-
-```bash
-git clone https://github.com/chaimaJr/CoffeeHop.git
-cd CoffeeHop
-```
-
-
-#### 2. Backend Setup (Django)
+### Backend Setup (Django)
 
 Navigate to the backend directory:
 
@@ -103,7 +114,7 @@ python manage.py runserver
 The backend API will be available at `http://localhost:8000`
 
 
-#### 3. Frontend Setup (Ionic)
+### Frontend Setup (Ionic)
 
 Open a new terminal and navigate to the frontend directory:
 
@@ -125,19 +136,24 @@ ionic serve
 
 The app will be available at `http://localhost:8100`
 
+---
 
-## Usage
+## Backend environment variables
 
-- As a Customer:
-  - Sign up for a new account or log in with existing credentials.
-  - Browse the coffee menu and view details of each item.
-  - Add items to your cart and proceed to checkout to place an order.
-  - View your past orders and order status in your account dashboard.
+Copy Backend/.env.example → Backend/.env and update.
 
-- As a barista:
-  - Log in with existing credentials.
-  - Browse incoming orders and view detials of each one.
-  - Update orders status after 
+Keys present in .env.example:
+- SECRET_KEY — Django secret key (replace in production)
+- DEBUG — True / False
+- ALLOWED_HOSTS — CSV of allowed hostnames
+- DATABASE_URL — e.g., sqlite:///db.sqlite3 or postgres://user:pass@host:port/dbname
+- CORS_ALLOWED_ORIGINS — e.g., http://localhost:8100,http://localhost:4200
+- (Optional email settings commented in example)
+
+Important frontend keys (in Frontend/src/environments/environment.ts)
+- apiUrl — base REST API URL (default: http://127.0.0.1:8000/api)
+- wsUrl — WebSocket URL for realtime (default: ws://127.0.0.1:8000/ws)
+
 
 ## API endpoints:
 ---
